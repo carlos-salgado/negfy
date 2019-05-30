@@ -1,0 +1,827 @@
+module linked_list_mod
+   implicit none
+   type node
+!      integer, pointer :: array(:) => NULL()
+      real, pointer :: array(:) => NULL()
+      type(node), pointer :: next => NULL()
+   end type node
+end module linked_list_mod
+
+module get_record_mod
+   use linked_list_mod
+   implicit none
+   type char_node
+      character c
+      type(char_node), pointer :: next => NULL()
+   end type char_node
+   contains
+      subroutine get_record(iunit,temp)
+         integer, intent(in) :: iunit
+         type(node) :: temp
+         integer numc
+         character c
+         integer iostat
+         type(char_node), pointer :: head
+         type(char_node), pointer :: cursor
+
+         numc = 0
+         nullify(head)
+         do
+            read(iunit,'(a)',advance='no',iostat=iostat) c
+            if(iostat /= 0) exit
+            if(numc == 0) then
+               allocate(head)
+               cursor => head
+            else
+               allocate(cursor%next)
+               cursor => cursor%next
+            end if
+            numc = numc+1
+            cursor%c = c
+         end do
+         call gr_1(head,numc,temp%array)
+      end subroutine get_record
+
+      subroutine gr_1(head,numc,array)
+         type(char_node), pointer :: head
+         integer, intent(in) :: numc
+!         integer, pointer :: array(:)
+         real, pointer :: array(:)
+         character(numc) line
+         integer i
+         type(char_node), pointer :: cursor
+         character(3), parameter :: set = ', '//achar(9)
+         integer numi
+         integer deltai
+
+         do i = 1, numc
+            cursor => head
+            head => head%next
+            line(i:i) = cursor%c
+            deallocate(cursor)
+         end do
+         numi = 0
+         i = 1
+         do
+            deltai = verify(line(i:),set)
+            if(deltai == 0) exit
+            i = i+deltai-1
+            numi = numi+1
+            deltai = scan(line(i:),set)
+            if(deltai == 0) exit
+            i = i+deltai-1
+         end do
+         allocate(array(numi))
+         read(line,*) array
+      end subroutine gr_1
+!end module get_record_mod
+
+!program test
+SUBROUTINE test
+!   use get_record_mod
+   implicit none
+   integer iunit
+   type(node), pointer :: head
+   type(node), pointer :: cursor
+!   integer, allocatable :: array(:,:)
+   real, allocatable :: array(:,:)
+   integer rows
+   integer, allocatable :: temp(:)
+   integer i
+   character(80) fmt
+   integer iostat
+
+   allocate(head)
+   iunit = 10
+   open(iunit,file='test.dat',status='old')
+   call get_record(iunit,head)
+   rows = 1
+   allocate(temp(size(head%array)))
+   cursor => head
+   do
+      read(iunit,*,iostat=iostat) temp
+      if(iostat /= 0) exit
+      rows = rows+1
+      allocate(cursor%next)
+      cursor => cursor%next
+      allocate(cursor%array(size(temp)))
+      cursor%array = temp
+   end do
+   allocate(array(rows,size(temp)))
+   deallocate(temp)
+   do i = 1, rows
+      cursor => head
+      head => head%next
+      array(i,:) = cursor%array
+      deallocate(cursor)
+   end do
+! At this point array contains the values from the input file.
+   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,i0))'
+   write(*,fmt) transpose(array)
+!end program test
+END SUBROUTINE test
+end module get_record_mod
+
+!--
+!write(*,*) transfer((/17.392111325966148d0,3.6351694777236872d228, &
+!6.0134700169991705d-154/),(/'x'/)); end
+
+
+
+PROGRAM AntG
+    use get_record_mod
+    use AntMod
+    implicit none
+    integer, parameter :: ifu_log = 109
+    integer, parameter :: ifu_com = 110
+    integer :: ios
+    CHARACTER(len=32) :: logfile, basfile
+    real, dimension(:,:), allocatable :: S, H
+    real, dimension(:,:), allocatable :: PSO
+!---------------------------------------------------------------------------
+!------------- GET RECORD MOD PART -----------------------------------------
+!---------------------------------------------------------------------------
+!IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig
+   integer :: IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig
+   real :: denerrj, Crit
+  integer, PARAMETER :: zero=0, two=2, one=1
+  logical    :: ANTOn
+   integer :: JCycle
+  logical :: UHF
+
+   integer iunit
+   type(node), pointer :: head
+   type(node), pointer :: cursor
+!   integer, allocatable :: array(:,:)
+   integer :: inputNAtoms,inputNShell,NBasis,inputNSpin,inputNAE,inputNBE,inputNE
+   integer, allocatable :: inputJAN(:), inputAOS(:), inputShellT(:), inputShellC(:)
+   integer, allocatable :: inputIAN(:)
+   real, allocatable :: inputAtmChg(:)
+   real, allocatable :: inputAtmCo(:,:)
+   Character (len=2), allocatable :: strElem(:)
+   real, allocatable :: array(:,:)
+   real, allocatable :: dens(:,:,:)
+   real, allocatable :: olddens(:,:,:)
+   real, allocatable :: singlespindens(:,:)
+   real, allocatable :: ham(:,:)
+   real, allocatable :: pivham(:,:)
+   real :: EE, fockerror, denserror
+   real, allocatable :: fock(:,:)
+   real, allocatable :: ufock(:,:)
+   real, allocatable :: oldufock(:,:)
+   real, allocatable :: overlap(:,:)
+   real, allocatable :: Coulomb(:,:)
+   real, allocatable :: Exchange(:,:,:)
+   real, allocatable :: eig(:)
+   real, allocatable :: ERI(:,:,:,:)
+   real, allocatable :: ERIsparse(:), bigERIsparse(:)
+   real :: pivERIsparse
+   integer, allocatable :: ERIsparseindexes(:,:), bigERIsparseindexes(:,:)
+   integer :: pivERIsparseindexes(4)
+   integer :: isizeERIsparse
+   CHARACTER(LEN=256) :: newline
+   integer rows
+!   integer, allocatable :: temp(:)
+   real, allocatable :: temp(:)
+   integer :: i, j
+   integer :: iSpin
+   character(80) fmt
+   integer iostat
+   real, dimension(2) :: Q
+   integer :: inputNCycles
+   real :: ALPHA, BETA ! TO USE WITH DGEMM 
+   real :: Hart = 27.2113834d0
+!---------------------------------------------------------------------------
+!------------- GETARG PART -------------------------------------------------
+!---------------------------------------------------------------------------
+!    integer :: i
+    integer :: narg, natoms
+!    CHARACTER(len=32) :: arg
+    CHARACTER(len=32), dimension(:), allocatable :: arg
+    CHARACTER(len=50) :: filename, antname
+    logical :: SOCtrue
+    print *, "PROGRAM STARTED!!!"
+    narg = iargc()
+    allocate (arg(narg))
+    DO i = 1,narg
+      CALL getarg(i, arg(i))
+      WRITE (*,*) arg(i)
+    END DO
+    filename = arg(1)
+    print *, "filename = ",filename
+
+    if(narg>1)then
+        antname = arg(2)
+        open(1,file='name',STATUS='unknown')
+        Write(1,'(A)')antname
+        close(1)
+    end if
+!    ifu_com = 110
+!---------------------------------------------------------------------------
+
+    !jobname="Au9-Au4-Au-Au4-Au9"
+    print *, "filename = ", filename
+
+!    open(1,file=filename)
+    IRwH=2001
+    IRwPA=2002
+    IRwPB=2003
+    IRwFA=2004
+    IRwFB=2005
+    IRwS1=2006
+    IRwEig=2007
+    denerrj = 1.0d-5
+    Crit = 1.0d-5
+    AntOn = .TRUE.
+    UHF = .FALSE.
+    JCycle = 0
+    ! inputNAtoms,inputNShell,NBasis,inputNAE,inputNBE,inputNE
+    ! FOR 10 ATOMS
+!    inputNAtoms = 10
+!    inputNShell = 20
+!    allocate(inputAOS(inputNShell),&
+!             inputJAN(inputNShell),&
+!             inputShellT(inputNShell),&
+!             inputShellC(inputNShell))
+!    inputAOS = (/ 1, 2, 6, 7,&
+!                  11, 12, 16, 17,&
+!                  21, 22, 26, 27,&
+!                  31, 32, 36, 37,&
+!                  41, 42, 46, 47 /)
+!    inputJAN = (/ 1, 1, 2, 2,&
+!                  3, 3, 4, 4,&
+!                  5, 5, 6, 6,&
+!                  7, 7, 8, 8,&
+!                  9, 9, 10, 10 /)
+!    inputShellT = (/ 0, 1, 0, 1,&
+!                     0, 1, 0, 1,&
+!                     0, 1, 0, 1,&
+!                     0, 1, 0, 1,&
+!                     0, 1, 0, 0 /)
+!    inputShellT = (/ 0, 0, 0, 0,&
+!                     0, 0, 0, 0,&
+!                     0, 0, 0, 0,&
+!                     0, 0, 0, 0,&
+!                     0, 0, 0, 0 /)
+    ! FOR 2 ATOMS.
+    inputNAtoms = 2
+    inputNShell = 4
+    allocate(inputAOS(inputNShell),&
+             inputJAN(inputNShell),&
+             inputShellT(inputNShell),&
+             inputShellC(inputNShell))
+    inputAOS = (/ 1, 2, 6, 7 /)
+    inputJAN = (/ 1, 1, 2, 2 /)
+    inputShellT = (/ 0, 1, 0, 1 /)
+    inputShellT = (/ 0, 0, 0, 0 /)
+!---------------------------------------------------------------------------
+!------------- GET RECORD MOD PART -----------------------------------------
+!---------------------------------------------------------------------------
+!------------- READ DENS ---------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------- READ DENS -------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   allocate(head)
+   iunit = 10
+!   open(iunit,file='test.dat',status='old')
+   open(iunit,file='DENS.' // trim(filename) // '.dat',status='old')
+   call get_record(iunit,head)
+   rows = 1
+   allocate(temp(size(head%array)))
+   cursor => head
+   do
+      read(iunit,*,iostat=iostat) temp
+      if(iostat /= 0) exit
+      rows = rows+1
+      print *, 'rows',rows
+      allocate(cursor%next)
+      cursor => cursor%next
+      allocate(cursor%array(size(temp)))
+      cursor%array = temp
+   end do
+   allocate(array(rows,size(temp)))
+   deallocate(temp)
+   do i = 1, rows
+      cursor => head
+      head => head%next
+      array(i,:) = cursor%array
+      deallocate(cursor)
+      print *, array(i,1)
+   end do
+! At this point array contains the values from the input file.
+!   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,i0))'
+   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,f12.6))'
+   print *, fmt
+   write(*,fmt) transpose(array)
+
+   inputNSpin = 1
+   IF(UHF) inputNSpin = 2
+   allocate(dens(inputNSpin,SIZE(array,1),SIZE(array,2)))
+   dens(1,:,:)=transpose(array)
+   IF(UHF)dens(2,:,:)=dens(2,:,:)
+
+   deallocate(array)
+   deallocate(head)
+   print *, "-------------------------------------------------------------\n"
+   print *, "----------------------- END READ DENS -----------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!------------- READ HAM ----------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------- READ HAM --------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   allocate(head)
+   iunit = 10
+!   open(iunit,file='test.dat',status='old')
+   open(iunit,file='HAM.' // trim(filename) // '.dat',status='old')
+   call get_record(iunit,head)
+   rows = 1
+   allocate(temp(size(head%array)))
+   cursor => head
+   do
+      read(iunit,*,iostat=iostat) temp
+      if(iostat /= 0) exit
+      rows = rows+1
+      allocate(cursor%next)
+      cursor => cursor%next
+      allocate(cursor%array(size(temp)))
+      cursor%array = temp
+   end do
+   allocate(array(rows,size(temp)))
+   deallocate(temp)
+   do i = 1, rows
+      cursor => head
+      head => head%next
+      array(i,:) = cursor%array
+      deallocate(cursor)
+   end do
+! At this point array contains the values from the input file.
+!   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,i0))'
+   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,f12.6))'
+   write(*,fmt) transpose(array)
+
+   allocate(ham(SIZE(array,1),SIZE(array,2)))
+   ham=transpose(array)
+
+   deallocate(array)
+   deallocate(head)
+   print *, "-------------------------------------------------------------\n"
+   print *, "----------------------- END READ HAM ------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!------------- READ FOCK ---------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------- READ FOCK -------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   allocate(head)
+   iunit = 10
+!   open(iunit,file='test.dat',status='old')
+   open(iunit,file='FOCK.' // trim(filename) // '.dat',status='old')
+   call get_record(iunit,head)
+   rows = 1
+   allocate(temp(size(head%array)))
+   cursor => head
+   do
+      read(iunit,*,iostat=iostat) temp
+      if(iostat /= 0) exit
+      rows = rows+1
+      allocate(cursor%next)
+      cursor => cursor%next
+      allocate(cursor%array(size(temp)))
+      cursor%array = temp
+   end do
+   allocate(array(rows,size(temp)))
+   deallocate(temp)
+   do i = 1, rows
+      cursor => head
+      head => head%next
+      array(i,:) = cursor%array
+      deallocate(cursor)
+   end do
+! At this point array contains the values from the input file.
+!   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,i0))'
+   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,f12.6))'
+   write(*,fmt) transpose(array)
+
+   allocate(fock(SIZE(array,1),SIZE(array,2)))
+   fock=transpose(array)
+
+   deallocate(array)
+   deallocate(head)
+   print *, "-------------------------------------------------------------\n"
+   print *, "----------------------- END READ FOCK -----------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!------------- READ OVERLAP ------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------ READ OVERLAP -----------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   allocate(head)
+   iunit = 10
+!   open(iunit,file='test.dat',status='old')
+   open(iunit,file='OV.' // trim(filename) // '.dat',status='old')
+   call get_record(iunit,head)
+   rows = 1
+   allocate(temp(size(head%array)))
+   cursor => head
+   do
+      read(iunit,*,iostat=iostat) temp
+      if(iostat /= 0) exit
+      rows = rows+1
+      allocate(cursor%next)
+      cursor => cursor%next
+      allocate(cursor%array(size(temp)))
+      cursor%array = temp
+   end do
+   allocate(array(rows,size(temp)))
+   deallocate(temp)
+   do i = 1, rows
+      cursor => head
+      head => head%next
+      array(i,:) = cursor%array
+      deallocate(cursor)
+   end do
+! At this point array contains the values from the input file.
+!   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,i0))'
+   write(fmt,'(a,i0,a)') '(',size(array,2),'(1x,f12.6))'
+   write(*,fmt) transpose(array)
+
+   allocate(overlap(SIZE(array,1),SIZE(array,2)))
+   overlap=transpose(array)
+
+   deallocate(array)
+   deallocate(head)
+   print *, "-------------------------------------------------------------\n"
+   print *, "---------------------- END READ OVERLAP ---------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!------------------------------------------------------------------------------------------
+!--------------------- Z-MATRIX -----------------------------------------------------------
+!------------------------------------------------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "-------------------------- READ ERI -------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   open(iunit,file='ERI.' // trim(filename) // '.dat',status='old')
+    DO
+      READ (iunit,fmt="(A)",iostat=ios) newline
+!      print *, "newline = ", newline
+!      IF((newline(1:1) == '!') .OR. (newline(1:1) == '*') .OR. &
+!        (newline(1:1) == '%') .OR. (newline(1:1) == '#') ) CYCLE
+!      IF( (len_trim(newline) == 0)  .OR. (newline(1:1) == '\n') .OR. &
+!          (newline(1:1) == '') .OR. (newline(1:1) == ' ') )THEN
+!        write (*, *) "blank line AFTER Z-MATRIX"
+!        EXIT
+!      END IF
+
+!      IF((newline(1:1) == ' ') .OR. (newline(1:1) == '\n') .OR. &
+!         (newline(1:1) == '')) EXIT
+       IF (ios < 0) THEN
+         Write(*,'(A)')"END OF ERI FILE REACHED"
+         EXIT
+       ENDIF
+      READ (newline,fmt=*) pivERIsparseindexes(1), pivERIsparseindexes(2), pivERIsparseindexes(3), pivERIsparseindexes(4), pivERIsparse
+      Write(*,'(I4,I4,I4,I4,F18.6,A)') pivERIsparseindexes(1), pivERIsparseindexes(2), pivERIsparseindexes(3), pivERIsparseindexes(4),pivERIsparse
+
+      if(allocated(ERIsparse)) then
+        isizeERIsparse = size(ERIsparse)
+        allocate(bigERIsparse(isizeERIsparse+1))
+        do i=1,isizeERIsparse
+          bigERIsparseindexes(i,:) = ERIsparseindexes(i,:)     
+          bigERIsparse(i) = ERIsparse(i)
+        end do
+        bigERIsparseindexes(isizeERIsparse+1,:) = pivERIsparseindexes
+        bigERIsparse(isizeERIsparse+1) = pivERIsparse ! HERE IS WHERE I HAVE TO ADD THE NEW COORD TO THE FULL ERI(:).
+        deallocate(ERIsparse)
+        call move_alloc(bigERIsparse, ERIsparse)
+      else
+        allocate(ERIsparse(1))
+        allocate(ERIsparseindexes(1,4))
+        ERIsparseindexes(1,:) = pivERIsparseindexes(:)
+        ERIsparse(1) = pivERIsparse ! HERE IS WHERE I HAVE TO ADD THE NEW COORD TO THE FULL ERIsparse(:).
+      end if
+      !PAUSE
+    END DO
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------ END READ ERI -----------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   print *, "-------------------- CONVERT ERI TO TENSOR ------------------\n"
+   print *, "-------------------------------------------------------------\n"
+   ERIsize=MAXVAL(MAXVAL(ERIsparseindexes))
+   NBasis=SIZE(ham,1)
+   IF(ERIsize<NBasis)ERISize=NBasis
+   IF(ERIsize>NBasis)THEN
+     Write(*,'(A)')"ERI size is bigger than NBasis. Truncating it."
+   ENDIF
+   Allocate(ERI(ERIsize,ERIsize,ERIsize,ERIsize))
+   ERI=0.0d0
+   do isparse=1,size(ERIsparse)
+     IF((ERIsparseindexes(1)>NBasis).or.(ERIsparseindexes(2)>NBasis).or.(ERIsparseindexes(2)>NBasis).or.(ERIsparseindexes(2)>NBasis))CYCLE ! TRUNCATING ERI.
+     ERI(ERIsparseindexes(1),ERIsparseindexes(2),ERIsparseindexes(3),ERIsparseindexes(4))=ERIsparse(isparse)
+   end do
+
+   Allocate(Coulomb(ERIsize,ERIsize),&
+            Exchange(inputNSpin,ERIsize,ERIsize))
+   do iSpin=1,inputNSpin
+     do i=1,ERIsize
+       do j=1,ERIsize
+         do k=1,ERIsize
+           do l=1,ERIsize
+             Coulomb(i,j)=Coulomb(i,j)+eri(i,j,k,l)*dens(iSpin,k,l)
+             Exchange(iSpin,i,k)=Exchange(iSpin,i,k)-0.5*eri(i,k,j,l)*dens(iSpin,j,l)
+           end do
+         end do
+       end do
+     end do
+   end do
+   do i=1,NBasis
+     write(*, '(A,I2,A,10F8.4)')"Coulomb(",i,",:) = ",( Coulomb(i,j) ,j=1,NBasis)
+   end do
+   do iSpin=1,inputNSpin
+     do i=1,NBasis
+       write(*, '(A,I1,A,I2,A,10F8.4)')"Exchange(",iSpin,",",i,",:) = ",( Exchange(i,j) ,j=1,NBasis)
+     end do
+   end do
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------ END CONVERT ERI TO TENSOR ------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!------------------------------------------------------------------------------------------
+!------------ FINISHED Z-MATRIX -----------------------------------------------------------
+!------------------------------------------------------------------------------------------
+   print *, "-------------------------------------------------------------\n"
+   print *, "-------------------------- READ GEOM ------------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!c
+!c  This program reads n points from a data file and stores them in 
+!c  3 arrays x, y, z.
+!c
+!      integer nmax, u
+!      parameter (nmax=1000, u=20)
+!      real x(nmax), y(nmax), z(nmax)
+
+!c  Open the data file
+      open (iunit, FILE=trim(filename) // '.xyz', STATUS='OLD')
+
+!c  Read the number of points
+      read(iunit,*) inputNAtoms
+      Write(*,'(A,I3)')"InputNAtoms read from xyz header: ", inputNAtoms
+      read(iunit,*)
+!      if (n.GT.nmax) then
+!         write(*,*) 'Error: n = ', n, 'is larger than nmax =', nmax
+!         goto 9999
+!      endif
+
+      allocate(inputIAN(inputNAtoms))
+      allocate (strElem(inputNAtoms))
+      allocate(inputAtmCo(3,inputNAtoms))
+      allocate(inputAtmChg(inputNAtoms))
+
+      write(*,*) 'inputNAtoms',inputNAtoms
+!c  Loop over the data points
+      do i=1,inputNAtoms
+         !read(iunit,100) x(i), y(i), z(i)
+         read(iunit,100) strElem(i), inputAtmCo(1,i), inputAtmCo(2,i), inputAtmCo(3,i)
+         write(*,100) strElem(i), inputAtmCo(1,i), inputAtmCo(2,i), inputAtmCo(3,i)
+         inputIAN(i) = 3
+         inputAtmChg(i) = 3.0d0
+   10 enddo
+!  100 format (3(F10.4))
+!  100 format ((A2),3(F14.6))
+  100 format ((A2),3(F12.6))
+
+!c  Close the file
+      close (iunit)
+
+      inputNE = SUM(inputIAN(:))
+      IF (MOD(inputNE,2)==0) THEN
+            inputNAE = inputNE/2
+            inputNBE = inputNE/2
+            PRINT*, 'THE NUMBER IS AN EVEN NUMBER'
+            PRINT*, 'input(NAE,NBE)=(',inputNAE,',',inputNBE,')'
+      ELSE
+            inputNAE = FLOOR(REAL(inputNE/2))+1
+            inputNBE = FLOOR(REAL(inputNE/2))
+            PRINT*, 'THE NUMBER IS AN ODD NUMBER'
+            PRINT*, 'input(NAE,NBE)=(',inputNAE,',',inputNBE,')'
+      END IF
+
+!c  Now we should process the data somehow...
+!c  (missing part)
+
+! 9999 stop
+   print *, "-------------------------------------------------------------\n"
+   print *, "------------------------ END READ GEOM ----------------------\n"
+   print *, "-------------------------------------------------------------\n"
+!---------------------------------------------------------------------------
+!------------- END GET RECORD MOD PART -------------------------------------
+!---------------------------------------------------------------------------
+
+
+
+
+
+
+open(unit=2009, file='CONVER.' // trim(filename) // '.dat', ACTION="write", STATUS="replace")
+!    CALL ANT (UHF,JCycle,IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig,denerrj,Crit,ANTOn,NBasis)
+    ! THE LINE BELOW WORKS.
+    !CALL ANT (UHF,JCycle,IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig,denerrj,Crit,ANTOn,SIZE(ham,1),dens,ham,fock,overlap)
+    !CALL ANT (UHF,JCycle,IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig,denerrj,Crit,ANTOn,NBasis,pivDens,pivHam,pivFock,pivOver)
+    NBasis=SIZE(ham,1)
+    allocate(inputNSpin,ufock(SIZE(fock,1),SIZE(fock,2)))
+    allocate(inputNSpin,oldufock(SIZE(fock,1),SIZE(fock,2)))
+    allocate(pivham(SIZE(fock,1),SIZE(fock,2)))
+
+!    IF(UHF)THEN
+!      !ufock = MATMUL(dens(1,:,:)+dens(2,:,:),(MATMUL(OVERLAP,fock)))
+!    ELSE
+!      !ufock = MATMUL(2*dens(1,:,:),(MATMUL(OVERLAP,fock)))
+!    END IF
+    do iSpin=1,inputNSpin
+      ufock(iSpin,:,:)=Coulomb(:,:)+Exchange(iSpin,:,:)
+    end do
+
+    allocate(olddens(inputNSpin,NBasis,NBasis))
+    allocate(singlespindens(NBasis,NBasis))
+    olddens=dens
+    oldufock=ufock
+    JCycle=0
+    inputNCycles=999999
+    DO JCycle=0,inputNCycles,1
+!     DO WHILE (JCycle .LE. inputNCycles)
+      olddens=dens
+      !oldufock = 0.9d0*oldufock+0.1d0*ufock
+      oldufock = 0.9d0*oldufock+0.1d0*ufock  
+      !PRINT *, "UHF,JCycle,IRwH,IRwPA,IRwPB,IRwFA,IRwFB",UHF,JCycle,IRwH,IRwPA,IRwPB,IRwFA,IRwFB
+      !PRINT *, "IRwS1,IRwEig,denerrj,Crit,ANTOn",IRwS1,IRwEig,denerrj,Crit,ANTOn
+      !PRINT *, "inputNAtoms,inputNShell,NBasis",inputNAtoms,inputNShell,NBasis
+      !PRINT *, "inputNAE,inputNBE,inputNE",inputNAE,inputNBE,inputNE
+      CALL ANT(UHF,JCycle,inputNCycles,IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig,denerrj,Crit,ANTOn,&
+                 inputNAtoms,inputNShell,NBasis,inputNSpin,inputJAN,inputAOS,inputShellT,inputShellC,inputNAE,&
+                 inputNBE,inputNE,inputIAN,inputAtmCo,inputAtmChg,dens,ham,oldufock,overlap)
+      IF(JCycle > 0)THEN
+        do i=1,NBasis
+          write(*, '(A,I2,A,10F8.4)')"HAM(",i,",:) = ",( ham(i,j) ,j=1,NBasis)
+        end do
+        IF(UHF)THEN
+          !pivham = MATMUL(dens(1,:,:)+dens(2,:,:),(MATMUL(overlap,ham)))
+          !ufock = MATMUL(dens(1,:,:)+dens(2,:,:),(MATMUL(overlap,fock)))
+          pivham=0.0d0
+          singlespindens=dens(1,:,:)+dens(2,:,:)
+          pivham = MATMUL(ham,singlespindens)
+          ufock = MATMUL(fock,singlespindens)
+        ELSE
+          !dens=2.0d0*dens ! WILL BE SUMMED AFTER SCF LOOP.
+          !pivham = MATMUL(2*dens(1,:,:),(MATMUL(overlap,ham)))
+          !ufock = MATMUL(2*dens(1,:,:),(MATMUL(overlap,fock)))
+          pivham=0.0d0
+          singlespindens=2.0d0*dens(1,:,:)
+          do i=1,NBasis
+            write(*, '(A,I2,A,10F8.4)')"singlespindens(",i,",:) = ",( singlespindens(i,j) ,j=1,NBasis)
+          end do
+          ! THE PRODUCT OF SYMMETRIC MATRICES IN GENERAL IS NOT SYMMETRIC.
+          !pivham = MATMUL(singlespindens,ham)
+          ALPHA = 1.0D0
+          BETA = 0.0D0
+          CALL DGEMM('N','N',NBasis,NBasis,NBasis,ALPHA,ham,NBasis,singlespindens,NBasis,BETA,pivham,NBasis)
+          do i=1,NBasis
+            write(*, '(A,I2,A,10F8.4)')"pivham(",i,",:) = ",( pivham(i,j) ,j=1,NBasis)
+          end do
+          !ufock = MATMUL(singlespindens,fock)
+          ALPHA = 1.0D0
+          BETA = 0.0D0
+          CALL DGEMM('N','N',NBasis,NBasis,NBasis,ALPHA,fock,NBasis,singlespindens,NBasis,BETA,ufock,NBasis)
+        END IF
+        !print *, dens(1,1:10,1:10)
+        !print *, "= dens(1,1:3,1:3)"
+        do iSpin=1,inputNSpin
+          do i=1,NBasis
+            write(*, '(A,I1,A,I2,A,10F8.4)')"D(",iSpin,",",i,",:) = ",( dens(iSpin,i,j) ,j=1,NBasis)
+          end do
+        end do
+        print *, "= dens(1,1:10,1:10)"
+        print *, pivham(1:3,1:3)
+        do i=1,NBasis
+          write(*, '(A,I2,A,10F8.4)')"UFOCK(",i,",:) = ",( ufock(i,j) ,j=1,NBasis)
+        end do
+        print *, "= ufock(1:10,1:10)"
+        EE=0.0d0
+        DO i=1,NBasis
+        EE = EE + pivham(i,i) + ufock(i,i)
+        END DO
+        fockerror = MAXVAL(MAXVAL(ufock-oldufock,1))
+        denserror = MAXVAL(MAXVAL(MAXVAL(dens-olddens,1),2))
+        if((.NOT.(ISNAN(fockerror)) .AND. (fockerror < 5.0d-3)).AND.(.NOT.(ISNAN(denserror)) .AND. (denserror < 5.0d-4)))EXIT
+        write(*,*)"*******************************************************************"
+        write(*,*)"********** PRINTING ENERGY AT CYCLE: ",JCycle," *****"
+        write(*,'(3(A,F16.8))')" ENERGY =",EE,"; FERR =",fockerror,"; DERR =",denserror
+        write(*,*)"*******************************************************************"
+        write(2009, '(A,I10,A,F20.10,A,F20.10,A,F20.10)')"JCycle:",JCycle,"; Energy:",EE,"; FERR:",fockerror,"; DERR:",denserror
+      END IF
+
+    END DO
+    write(*,*)"EXITED SCF LOOP IN AntG.f90"
+
+
+        write(*,*)"*******************************************************************"
+        write(*,*)"********************** POSTPROCESSING CYCLE ***********************"
+        write(*,*)"*******************************************************************"
+      JCycle=inputNCycles
+
+      CALL ANT(UHF,JCycle,inputNCycles,IRwH,IRwPA,IRwPB,IRwFA,IRwFB,IRwS1,IRwEig,denerrj,Crit,ANTOn,&
+                 inputNAtoms,inputNShell,NBasis,inputNSpin,inputJAN,inputAOS,inputShellT,inputShellC,inputNAE,&
+                 inputNBE,inputNE,inputIAN,inputAtmCo,inputAtmChg,dens,ham,oldufock,overlap)
+        do i=1,NBasis
+          write(*, '(A,I2,A,10F8.4)')"HAM(",i,",:) = ",( ham(i,j) ,j=1,NBasis)
+        end do
+        IF(UHF)THEN
+          !pivham = MATMUL(dens(1,:,:)+dens(2,:,:),(MATMUL(overlap,ham)))
+          !ufock = MATMUL(dens(1,:,:)+dens(2,:,:),(MATMUL(overlap,fock)))
+          pivham=0.0d0
+          singlespindens=dens(1,:,:)+dens(2,:,:)
+          pivham = MATMUL(ham,singlespindens)
+          ufock = MATMUL(fock,singlespindens)
+        ELSE
+          !dens=2.0d0*dens ! WILL BE SUMMED AFTER SCF LOOP.
+          !pivham = MATMUL(2*dens(1,:,:),(MATMUL(overlap,ham)))
+          !ufock = MATMUL(2*dens(1,:,:),(MATMUL(overlap,fock)))
+          pivham=0.0d0
+          singlespindens=2.0d0*dens(1,:,:)
+          do i=1,NBasis
+            write(*, '(A,I2,A,10F8.4)')"singlespindens(",i,",:) = ",( singlespindens(i,j) ,j=1,NBasis)
+          end do
+          ! THE PRODUCT OF SYMMETRIC MATRICES IN GENERAL IS NOT SYMMETRIC.
+          !pivham = MATMUL(singlespindens,ham)
+          ALPHA = 1.0D0
+          BETA = 0.0D0
+          CALL DGEMM('N','N',NBasis,NBasis,NBasis,ALPHA,ham,NBasis,singlespindens,NBasis,BETA,pivham,NBasis)
+          do i=1,NBasis
+            write(*, '(A,I2,A,10F8.4)')"pivham(",i,",:) = ",( pivham(i,j) ,j=1,NBasis)
+          end do
+          !ufock = MATMUL(singlespindens,fock)
+          ALPHA = 1.0D0
+          BETA = 0.0D0
+          CALL DGEMM('N','N',NBasis,NBasis,NBasis,ALPHA,fock,NBasis,singlespindens,NBasis,BETA,ufock,NBasis)
+        END IF
+        !print *, dens(1,1:10,1:10)
+        !print *, "= dens(1,1:3,1:3)"
+        do iSpin=1,inputNSpin
+          do i=1,NBasis
+            write(*, '(A,I1,A,I2,A,10F8.4)')"D(",iSpin,",",i,",:) = ",( dens(iSpin,i,j) ,j=1,NBasis)
+          end do
+        end do
+        print *, "= dens(1,1:10,1:10)"
+        print *, pivham(1:3,1:3)
+        do i=1,NBasis
+          write(*, '(A,I2,A,10F8.4)')"UFOCK(",i,",:) = ",( ufock(i,j) ,j=1,NBasis)
+        end do
+        print *, "= ufock(1:10,1:10)"
+        EE=0.0d0
+        DO i=1,NBasis
+        EE = EE + pivham(i,i) + ufock(i,i)
+        END DO
+        fockerror = MAXVAL(MAXVAL(ufock-oldufock,1))
+        denserror = MAXVAL(MAXVAL(MAXVAL(dens-olddens,1),2))
+        if((.NOT.(ISNAN(fockerror)) .AND. (fockerror < 1.0d-2)).OR.(.NOT.(ISNAN(denserror)) .AND. (denserror < 1.0d-5)))JCycle=inputNCycles-1
+        write(*,*)"*******************************************************************"
+        write(*,*)"********** PRINTING ENERGY AT CYCLE: ",JCycle," *****"
+        write(*,'(3(A,F16.8))')" ENERGY =",EE,"; FERR =",fockerror,"; DERR =",denserror
+        write(*,*)"*******************************************************************"
+        write(2009, '(A,I10,A,F20.10,A,F20.10,A,F20.10)')"JCycle:",JCycle,"; Energy:",EE,"; FERR:",fockerror,"; DERR:",denserror
+
+        write(*,*)"*******************************************************************"
+        write(*,*)"******************** END POSTPROCESSING CYCLE *********************"
+        write(*,*)"*******************************************************************"
+
+
+
+    Q=0.0d0
+    do iSpin=1,inputNSpin
+      do i=1,NBasis
+        do j=1,NBasis
+          Q(iSpin)=Q(iSpin)+dens(iSpin,i,j)*overlap(j,i)
+        end do
+      end do
+      write(*, '(A,I1,A,F8.4)')"Q(",iSpin,") = ",Q(iSpin)
+    end do
+    write(*, '(A,F8.4)')"QTot = ",SUM(Q(:))
+  open(unit=2008, file='DENS.' // trim(filename) // '_final.dat', ACTION="write", STATUS="replace")
+  !open(iunit,file='DENS.' // trim(filename) // '.dat',status='old')
+  do iSpin=1,inputNSpin
+    write(*,'(A,I1)')"SPIN",iSpin
+    write(2008,'(A,I1)')"SPIN",iSpin
+    do i=1,NBasis
+      !write(*,'(A,I1,A,I2,A,I2,A,F14.6)')"D(",iSpin,",",i,",",j,") = ",D(iSpin,i,j)
+      write(2008, '(10F8.4)')( dens(iSpin,i,j) ,j=1,NBasis)
+      write(*, '(10F8.4)')( dens(iSpin,i,j) ,j=1,NBasis)
+      !write(*, 10(1600F14.7))( dens(iSpin,i,j) ,j=1,NBasis)
+    end do
+  end do
+  print *, "*******************************************************************"
+  print *, "*********************** PROGRAM FINISHED!!! ***********************"
+  print *, "*******************************************************************"
+  close(2001)
+  close(2002)
+  close(2003)
+  close(2004)
+  close(2005)
+  close(2006)
+  close(2007)
+  close(2008)
+  close(2009)
+END PROGRAM

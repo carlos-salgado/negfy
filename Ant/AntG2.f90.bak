@@ -1,0 +1,38 @@
+program arraycall 
+
+  implicit none
+  integer, dimension(:,:), allocatable :: array
+  integer           :: row
+  integer           :: stat ! Check return values
+  ! Define max. values
+  integer,parameter :: max_rows=1000
+  integer,parameter :: max_cols=3    ! As stated in the question
+  ! Total number of rows in the file
+  integer           :: tot_rows
+
+  allocate( array(max_cols,max_rows), stat=stat)
+  ! Always a good idea to check the return value
+  if ( stat /= 0 ) stop 'Cannot allocate memory!'
+
+  open(10, file='boundary.txt', access='sequential', &
+       status='old', FORM='FORMATTED')
+
+  DO row = 1, max_rows
+    ! You can directly read in arrays! 
+    READ (10,*,iostat=stat) array(:,row)
+    if ( stat > 0 ) then
+      stop 'An error occured while reading the file'
+    elseif ( stat < 0 ) then
+      tot_rows = row-1
+      print *, 'EOF reached. Found a total of ', tot_rows, 'rows.'
+      exit
+    endif
+  END DO
+
+  close(10)
+
+  ! Do stuff, e.g. re-allocate the array
+  print *,array(:,:tot_rows)
+
+  deallocate(array)
+end program arraycall 

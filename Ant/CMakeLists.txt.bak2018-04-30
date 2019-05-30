@@ -1,0 +1,109 @@
+# CMake project file for ANT
+
+cmake_minimum_required (VERSION 2.6)
+project (ANT C CXX Fortran)
+enable_language (Fortran)
+
+# make sure that the default is a RELEASE
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
+      "Choose the type of build, options are: None Debug Release."
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
+# default installation
+get_filename_component (default_prefix ".." ABSOLUTE)
+set (CMAKE_INSTALL_PREFIX ${default_prefix} CACHE STRING
+      "Choose the installation directory; by default it installs in the ANT directory."
+      FORCE)
+
+
+# ADDED TO LINK WITH "ar crv" instead of "ar cq", WHICH FAILS TO LINK EXECUTABLES.
+# SEEMS TO BE NOT NECESSARY.
+#set(CMAKE_AR "xiar")
+SET(CMAKE_C_ARCHIVE_CREATE "echo \"Sub directory\"; <CMAKE_AR> crv <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_CXX_ARCHIVE_CREATE "echo \"Sub directory\"; <CMAKE_AR> crv <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_Fortran_ARCHIVE_CREATE "echo \"Sub directory\"; <CMAKE_AR> crv <TARGET> <LINK_FLAGS> <OBJECTS>")
+
+set(MODINCLUDE "${default_prefix}/mod")
+#set(MODINCLUDE "${CMAKE_INSTALL_PREFIX}/mod")
+set(INCLUDE "${default_prefix}/include")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${MKLROOT}/include -I${INCLUDE}")
+
+# FFLAGS depend on the compiler
+get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+
+if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
+  # gfortran
+  set (CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3 -module= ${MODINCLUDE}")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g -module= ${MODINCLUDE}")
+elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
+  # ifort (untested)
+  set (CMAKE_Fortran_FLAGS_RELEASE "-i8 -r8 -I${MKLROOT}/include/intel64/lp64 -I${MKLROOT}/include -O3 -module ${MODINCLUDE}") #-gen-interfaces 
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-i8 -r8 -I${MKLROOT}/include/intel64/lp64 -I${MKLROOT}/include -O0 -g -module ${MODINCLUDE}") #-gen-interfaces 
+#  set (CMAKE_Fortran_FLAGS_RELEASE " -i8 -r8 -I${MKLROOT}/include/intel64/ilp64 -I${MKLROOT}/include -module= ${MODINCLUDE} -O3 -gen-interfaces")
+#  set (CMAKE_Fortran_FLAGS_DEBUG   " -i8 -r8 -I${MKLROOT}/include/intel64/ilp64 -I${MKLROOT}/include -module= ${MODINCLUDE} -O0 -g -gen-interfaces")
+elseif (Fortran_COMPILER_NAME MATCHES "g77")
+  # g77
+  set (CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3 -m32 -module= ${MODINCLUDE}")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g -m32 -module= ${MODINCLUDE}")
+else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
+  message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
+  message ("Fortran compiler: " ${Fortran_COMPILER_NAME})
+  message ("No optimized Fortran compiler flags are known, we just try -O2...")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-O2 -module= ${MODINCLUDE}")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -module= ${MODINCLUDE}")
+endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
+
+
+#############################################################################################################################
+# THIS BLOCK COMMENTED ON 2018-04-30 BECAUSE WAS NOT HERE ON 2018-12-31 AND IT WORKED.
+#############################################################################################################################
+#set(AR "ar") # COMMENTED ON 2018-04-18 TO AVOID LINKING PROBLEMS WHEN LINKING negfy.f90
+##set(ARFLAGS "r")
+#set(ARFLAGS "r --target=elf64-x86-64")
+## /usr/bin/ar: objetivos admitidos: elf64-x86-64 elf32-i386 elf32-iamcu elf32-x86-64 a.out-i386-linux pei-i386 pei-x86-64 elf64-l1om elf64-k1om elf64-little elf64-big #elf32-little elf32-big pe-x86-64 pe-bigobj-x86-64 pe-i386 plugin srec symbolsrec verilog tekhex binary ihex
+#set(LD "/usr/bin/ld -m elf_x86_64") # ORIGINAL CODE COMMENTED ON 2018-04-18
+##set(LD "/usr/bin/ld -m elf64-x86-64")
+#############################################################################################################################
+# END OF THIS BLOCK COMMENTED ON 2018-04-30 BECAUSE WAS NOT HERE ON 2018-12-31 AND IT WORKED.
+#############################################################################################################################
+
+
+
+
+
+#set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${MKLROOT}/lib/intel64/libmkl_blas95_lp64.a ${MKLROOT}/lib/intel64/libmkl_lapack95_lp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -liomp5 -lpthread -lm -ldl")
+#set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${MKLROOT}/lib/intel64/libmkl_blas95_ilp64.a ${MKLROOT}/lib/intel64/libmkl_lapack95_ilp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_cdft_core.a ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_ilp64.a -Wl,--end-group -lpthread -lm -ldl")
+
+
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MKLROOT}/lib/intel64/libmkl_blas95_lp64.a ${MKLROOT}/lib/intel64/libmkl_lapack95_lp64.a -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl")
+#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MKLROOT}/lib/intel64/libmkl_blas95_ilp64.a ${MKLROOT}/lib/intel64/libmkl_lapack95_ilp64.a -L${MKLROOT}/lib/intel64 -lmkl_cdft_core -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lpthread -lm -ldl")
+
+
+#file(GLOB ANTSOURCES "*.c" "*.f" "*.f90")
+file(GLOB ANTSOURCES "preproc.F" "system.c" "antcommon.f90" "ANTMod.f90" "BetheLattice.f90" "cluster.f90" "constants.f90" "correlation.f90" "device.f90" "g09Common.f90" "numeric.f90" "OneDLead.f90" "ortho.f90" "parameters.f90" "util.f90")
+
+
+# build executables
+#set (NMPROGRAMS "ANT.f90")
+#set (EXECUTABLES "ANT.exe" ${NMPROGRAMS})
+#set (SCRIPTS "gen_pert.sh" "pert_multi_mode.sh")
+
+#add_executable ("ANT.exe" "ANT.f90")
+#foreach (p ${NMPROGRAMS})
+#  add_executable (${p} "${p}.f90")
+#endforeach (p)
+#add_library(ANT ${A_srcs})
+#add_library(ANT ${ANTSOURCES})
+#add_library(ANT OBJECT ${ANTSOURCES})
+
+set(AntSt "AntSt")
+add_library(AntSt STATIC ${ANTSOURCES})
+add_library(Ant SHARED ${ANTSOURCES})
+
+# install executables and scripts
+#install (TARGETS ${EXECUTABLES} 
+#         RUNTIME DESTINATION "bin")
+#install (PROGRAMS ${SCRIPTS}
+#         DESTINATION "bin") 
