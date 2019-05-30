@@ -1,0 +1,120 @@
+# Makefile: A standard Makefile for HartreeFockClass.cpp and others.
+LIBINTROOT=/home/carlos/Python-Projects/DFT-CODES-PYTHON/libint-2.2-spher-shared-intel-derivs
+LIBINTBUILDDIR=$(LIBINTROOT)/libint-build
+LIBINTMASTERDIR=$(LIBINTROOT)/libint-master
+ifndef HFDIR
+  HFDIR=$(shell pwd)
+endif
+-include $(LIBINTBUILDDIR)/src/bin/MakeVars
+-include $(LIBINTBUILDDIR)/src/lib/libint/MakeVars.features
+CPP = icpc
+CXX = icpc
+AR = ar
+CPPFLAGS += -I$(LIBINTBUILDDIR)/include -I$(LIBINTBUILDDIR)/include/libint2 -I$(LIBINTBUILDDIR)/src/lib/libint -DSRCDATADIR=\"$(LIBINTMASTERDIR)/lib/basis\" 
+LDFLAGS  =
+FORTLIB  = -L$(HFDIR)/../lib -lMatrixMultiplyMod
+FORTSTATICLIB  = $(HFDIR)/../lib/libMatrixMultiplyMod.a
+
+
+COMPILER_LIB = $(LIBINTBUILDDIR)/src/bin/libint/libINT.a
+#COMPUTE_LIB = -lint2
+#COMPUTE_LIB = '-L$(LIBINTBUILDDIR)/lib -lint2'
+COMPUTE_LIB = $(LIBINTBUILDDIR)/lib/libint2.so
+vpath %.a $(LIBINTBUILDDIR)/lib:$(LIBINTBUILDDIR)/lib/.libs
+
+OBJSUF = o
+DEPSUF = d
+CXXDEPENDSUF = none
+CXXDEPENDFLAGS = -M
+
+TEST1 = hartree-fock++
+CXXTEST1SRC = $(TEST1).cpp
+CXXTEST1OBJ = $(CXXTEST1SRC:%.cpp=%.$(OBJSUF))
+CXXTEST1DEP = $(CXXTEST1SRC:%.cpp=%.$(DEPSUF))
+
+TEST2 = HartreeFockClass
+CXXTEST2SRC = $(TEST2).cpp
+CXXTEST2OBJ = $(CXXTEST2SRC:%.cpp=%.$(OBJSUF))
+CXXTEST2DEP = $(CXXTEST2SRC:%.cpp=%.$(DEPSUF))
+
+check1::
+check2::
+
+ifeq ($(CXXGEN_SUPPORTS_CPP11),yes)
+ ifeq ($(LIBINT_SUPPORTS_ONEBODY),yes)
+  ifeq ($(LIBINT_SUPPORTS_ERI),yes)
+   ifeq ($(LIBINT_HAS_EIGEN),yes)
+    ifeq ($(LIBINT_CONTRACTED_INTS),yes)
+     ifeq ($(LIBINT_SHELL_SET),1)
+check1:: $(TEST1)
+#	./$^ $(HFDIR)/h2o_rotated.xyz | $(PYTHON) $(HFDIR)/$^-validate.py $(LIBINTBUILDDIR)/src/lib/libint/MakeVars.features
+
+check2:: $(TEST2)
+#	./$^ $(HFDIR)/h2o_rotated.xyz | $(PYTHON3) $(HFDIR)/$^-validate.py $(LIBINTBUILDDIR)/src/lib/libint/MakeVars.features
+     endif
+    endif
+   endif
+  endif
+ endif
+endif
+
+
+$(TEST1):: $(CXXTEST1OBJ) $(COMPILER_LIB) $(COMPUTE_LIB)
+	$(LD) -o $@ $(LDFLAGS) $^ $(SYSLIBS) -lpthread
+
+$(TEST2):: $(CXXTEST2OBJ) $(COMPILER_LIB) $(COMPUTE_LIB)
+	$(LD) -o $@ $(LDFLAGS) $^ $(SYSLIBS) $(FORTLIB) -lpthread
+
+# Source files for timer and tester are to be compiled using CXXGEN
+$(TEST1) $(TEST2):: CXX=$(CXXGEN)
+$(TEST1) $(TEST2):: CXXFLAGS=$(CXXGENFLAGS)
+$(TEST1) $(TEST2):: LD=$(CXXGEN)
+
+HartreeFock.a HartreeFock.so HartreeFock.exe:: CXX=$(CXXGEN)
+HartreeFock.a HartreeFock.so HartreeFock.exe:: CXXFLAGS=$(CXXGENFLAGS)
+libHartreeFock.a libHartreeFock.so HartreeFock.exe:: LD=$(CXXGEN)
+
+clean::
+	-rm -rf $(TEST1) $(TEST2) *.o *.d *.a *.so *.exe
+
+distclean:: realclean
+	-rm -rf $(LIBINTBUILDDIR)/include/libint2/boost
+
+realclean:: clean
+
+targetclean:: clean
+
+$(LIBINTBUILDDIR)/include/libint2/boost/preprocessor.hpp: $(LIBINTBUILDDIR)/external/boost.tar.gz
+	gunzip -c $(LIBINTMASTERDIR)/external/boost.tar.gz | tar -xf - -C $(LIBINTBUILDDIR)/include/libint2
+
+depend:: $(CXXTEST1DEP) $(CXXTEST2DEP)
+
+ifneq ($(CXXDEPENDSUF),none)
+%.d:: %.cpp $(LIBINTBUILDDIR)/include/libint2/boost/preprocessor.hpp
+	$(CXXDEPEND) $(CXXDEPENDFLAGS) -c $(CPPFLAGS) $(CXXFLAGS) $< > /dev/null
+	sed 's/^$*.o/$*.$(OBJSUF) $*.d/g' < $(*F).$(CXXDEPENDSUF) > $(@F)
+	/bin/rm -f $(*F).$(CXXDEPENDSUF)
+else
+%.d:: %.cpp $(LIBINTBUILDDIR)/include/libint2/boost/preprocessor.hpp
+	$(CXXDEPEND) $(CXXDEPENDFLAGS) -c $(CPPFLAGS) $(CXXFLAGS) $< | sed 's/^$*.o/$*.$(OBJSUF) $*.d/g' > $(@F)
+endif
+
+-include $(CXXTEST1DEP)
+-include $(CXXTEST2DEP)
+
+#HartreeFockClass.o::
+#	$(CXXDEPEND) $(CXXDEPENDFLAGS) -c $(CPPFLAGS) $(CXXFLAGS) $< | sed 's/^$*.o/$*.$(OBJSUF) $*.d/g' > $(@F)
+
+libHartreeFock.a::
+	$(AR) rc $@ $(LDFLAGS) $^ $(FORTSTATICLIB)
+
+libHartreeFock.so::
+	$(LD)  -o $@ $(LDFLAGS) $^ $(SYSLIBS) $(FORTLIB) -lpthread -shared
+
+HartreeFock.exe::
+	$(LD) -o $@ $(LDFLAGS) $^ $(SYSLIBS) $(FORTLIB) -lpthread -fPIC
+
+default:: all
+
+all:: HartreeFockClass.o libHartreeFock.a libHartreeFock.so HartreeFock.exe $(TEST2) 
+
