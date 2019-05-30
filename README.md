@@ -13,11 +13,17 @@ NEGFY merges three Quantum Physics codes, exploiting their particular capabiliti
 Prerequisites:
 
 · Libint (https://github.com/evaleev/libint).
-· LibXC (https://tddft.org/programs/libxc): a library of exchange-correlation functionals for density-functional theory. The aim is to provide a portable, well tested and reliable set of exchange and correlation functionals that can be used by all the ETSF codes and also other codes. In Libxc you can find different types of functionals: LDA, GGA, hybrids, and mGGA. These functionals depend on local information, in the sense that the value of the potential at a given point depends only on the values of the density – and the gradient of the density and the kinetic energy density, for the GGA and mGGA cases – at a given point. It can calculate the functional itself and its derivative; for most functionals, higher-order derivatives are available. Libxc is written in C and has Fortran and Python bindings. 
+
+· LibXC (https://tddft.org/programs/libxc): a library of exchange-correlation functionals for density-functional theory. The aim is to provide a portable, well tested and reliable set of exchange and correlation functionals that can be used by all the ETSF codes and also other codes. In Libxc you can find different types of functionals: LDA, GGA, hybrids, and mGGA. These functionals depend on local information, in the sense that the value of the potential at a given point depends only on the values of the density – and the gradient of the density and the kinetic energy density, for the GGA and mGGA cases – at a given point. It can calculate the functional itself and its derivative; for most functionals, higher-order derivatives are available. Libxc is written in C and has Fortran and Python bindings.
+
 · Eigen (http://eigen.tuxfamily.org): a C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms.
-· Armadillo (http://arma.sourceforge.net): a high quality linear algebra library (matrix maths) for the C++ language, aiming towards a good balance between speed and ease of use
+
+· Armadillo (http://arma.sourceforge.net): a high quality linear algebra library (matrix maths) for the C++ language, aiming towards a good balance between speed and ease of use.
+
 · A C++ and Fortran compiler, preferably the Intel Compiler. GCC compiler is also tested.
+
 · CMake v3.4.3 or higher (https://cmake.org/): CMake is an open-source, cross-platform family of tools designed to build, test and package software.
+
 · HDF5 (https://www.hdfgroup.org/solutions/hdf5/): High-performance data management and storage suite.
 
 Under construction...
