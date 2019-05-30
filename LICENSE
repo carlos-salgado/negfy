@@ -1,165 +1,106 @@
-                   GNU LESSER GENERAL PUBLIC LICENSE
-                       Version 3, 29 June 2007
+NEGFY license agreement:
 
- Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
+NEGFY is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, according to version 3 of the License.
+
+NEGFY is based on 3 open source codes which are also covered by the GNU General Public License v3: ALACANT, Erkale and Libint, whose license terms follow:
 
 
-  This version of the GNU Lesser General Public License incorporates
-the terms and conditions of version 3 of the GNU General Public
-License, supplemented by the additional permissions listed below.
+ALACANT Licence Agreement:
+ALACANT is distributed to academic institutions after registration and agreement to this Licence. Please read it carefully and accept it if you agree to these conditions.
 
-  0. Additional Definitions.
+General:
+ALACANT is package for electronic quantum transport. The project started in the year 2000 at the Physics Department of the University of Alicante with the aim to compute the current in nanoscopic systems starting from first principles. At present ALACANT consists of two codes: ANT.G03, which interfaces with GAUSSIAN03 to implement the non-equilibrium Green's functions formalism and ANT.1D, a stand-alone code which can be used in combination with any standard density functional theory based code using localized basis sets.
 
-  As used herein, "this License" refers to version 3 of the GNU Lesser
-General Public License, and the "GNU GPL" refers to version 3 of the GNU
-General Public License.
+Authors:
+The authors of ALACANT are
+J. J. Palacios
+D. Jacob
+A. J. Pérez-Jiménez
+E. Louis
+E. San Fabián
+J. A. Vergés
 
-  "The Library" refers to a covered work governed by this License,
-other than an Application or a Combined Work as defined below.
+The “Copyright Holder” and the valid “Distributors” are the Authors mentioned above.
 
-  An "Application" is any work that makes use of an interface provided
-by the Library, but which is not otherwise based on the Library.
-Defining a subclass of a class defined by the Library is deemed a mode
-of using an interface provided by the Library.
+No Warranty:
+The ALACANT package is provided by the Distributors "as is" without warranty of any kind, either express or implied, including but not limited to the implied warranties of merchantability or fitness for a particular purpose. In no event shall the Distributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage. The entire risk as to the quality or performance of the program, or any action the Licensee may take based on the output of any part of the ALACANT package, is with the Licensee.
 
-  A "Combined Work" is a work produced by combining or linking an
-Application with the Library.  The particular version of the Library
-with which the Combined Work was made is also called the "Linked
-Version".
+Usage:
+The use of ALACANT under this agreement is restricted to academic institutions, including universities and nonmilitary
+public research laboratories, and for academic purposes, i.e., leading to open publication of results, with neither withhold of
+information nor intentional delay in publication. Notwithstanding these general definitions, the Authors reserve the exclusive right to determine what purposes and institutions are elegible for using the ALACANT package under this Licence, and to withhold the right to use the software where they are not satisfied that either condition is fulfilled. The Licensee is hereby provided with a nonexclusive, royaltyfree right to use any part of the ALACANT package, and to display, publish, perform, or otherwise use results obtained by use of the ALACANT package in any form, subject to the restriction that in any paper or other academic publication containing results wholly or partially derived from the results of use of the ALACANT package, the following papers must be cited in the normal manner:
 
-  The "Minimal Corresponding Source" for a Combined Work means the
-Corresponding Source for the Combined Work, excluding any source code
-for portions of the Combined Work that, considered in isolation, are
-based on the Application, and not on the Linked Version.
+Fullerene based molecular nanobridges: A firstprinciples study.
+J. J. Palacios, E. Louis, A. J. Pérez Jiménez and J. A. Vergés.
+Phys. Rev. B 64, 115411 (2001).
 
-  The "Corresponding Application Code" for a Combined Work means the
-object code and/or source code for the Application, including any data
-and utility programs needed for reproducing the Combined Work from the
-Application, but excluding the System Libraries of the Combined Work.
+First principles approach to electrical transport in atomicscale nanostructures.
+J. J. Palacios, A. J. PérezJiménez,
+E. Louis, E. SanFabián, and J. A. Vergés.
+Phys. Rev. B 66, 035322 (2002).
 
-  1. Exception to Section 3 of the GNU GPL.
+Implementing the Keldysh formalism into ab initio methods for the calculation of quantum transport: Application to metallic nanocontacts.
+E. Louis, J. A. Vergés, J. J. Palacios, A. J. Pérez Jiménez and E. SanFabián.
+Phys. Rev. B 67, 155321 (2003).
 
-  You may convey a covered work under sections 3 and 4 of this License
-without being bound by section 3 of the GNU GPL.
+Other papers relevant to the ALACANT package and method should be cited as best scientific practice dictates. Licensees are recommended to reference to the Developers of any publication containing results wholly or partially derived from the results of use of the ALACANT package. The abovementioned right to use the code is extensive to the members of the research group of the Licensee as long as the use is in collaboration with the Licensee leading to coauthored publication(s).
 
-  2. Conveying Modified Versions.
+Modifications:
+Licensees are permitted to modify ALACANT for their own private use; in any paper containing results wholly or partially derived from the use of a modified version of ALACANT the authors are required to state that a privately modified version of ALACANT is used and satisfy the conditions of use stated above. The Developers encourage Licensees to submit their modifications of the ALACANT package to them, so that the ALACANT package does not fork, and furthermore so that the package can be improved for all users. Licensees can thereby benefit from the ulterior developments of ALACANT. To this end, the Developers wish to encourage Licensees to make any modifications to the ALACANT package in as modular a fashion as possible. This permits maintenance of these modifications as a separate entity in many cases, and may allow their separation from ALACANT and distribution as a separate piece of software: in that case, such software is not subject to this Licence, and the authors of the separate software are free to choose any licensing terms they desire. However, if a given modification must be incorporated directly into the ALACANT package, the author(s) of any such modifications must provide a perpetual, royaltyfree,
+irrevocable license to the Authors and Developers, and the CopyrightHolder, to further modify their modifications ("the Contributed Code") as may prove necessary for the future development of ALACANT, and to distribute the Contributed Code (in its original or any later modified form) as part of the ALACANT package. The Developers, in the interests of maintaining the efficiency of the ALACANT package and the modularity of its code base, actively encourage all those considering modifications to the ALACANT package to discuss their planned modifications with the Developers beforehand.
 
-  If you modify a copy of the Library, and, in your modifications, a
-facility refers to a function or data to be supplied by an Application
-that uses the facility (other than as an argument passed when the
-facility is invoked), then you may convey a copy of the modified
-version:
+Support:
+See webpage www.alacant.dfa.ua for support.
 
-   a) under this License, provided that you make a good faith effort to
-   ensure that, in the event an Application does not supply the
-   function or data, the facility still operates, and performs
-   whatever part of its purpose remains meaningful, or
+Redistribution:
+The authors reserve the exclusive right to distribute the ALACANT package. Licensees have no right to distribute the ALACANT package, a modified or alternative version thereof, or any other program making direct use of parts of the ALACANT package, without the prior written consent of the Distributors.
 
-   b) under the GNU GPL, with none of the additional permissions of
-   this License applicable to that copy.
+All other rights:
+All other rights not explicitly mentioned in this document are reserved. In particular, the Authors reserve all rights to resolve any and all conflicts arising in the development and distribution policies of the ALACANT package. All Licensees, receiving the ALACANT package for any purpose, accept this by signing this Licence. This Licence takes effect when a copy of this document, signed and dated by the prospective Licensee, is received by the Distributors, and not before. Without a valid Licence, a prospective Licensee does not have the right to use or modify the ALACANT package. Everyone is permitted to copy and distribute verbatim copies of this Licence document, but changing it is not permitted. I agree to the terms and conditions of this Licence
 
-  3. Object Code Incorporating Material from Library Header Files.
 
-  The object code form of an Application may incorporate material from
-a header file that is part of the Library.  You may convey such object
-code under terms of your choice, provided that, if the incorporated
-material is not limited to numerical parameters, data structure
-layouts and accessors, or small macros, inline functions and templates
-(ten or fewer lines in length), you do both of the following:
 
-   a) Give prominent notice with each copy of the object code that the
-   Library is used in it and that the Library and its use are
-   covered by this License.
 
-   b) Accompany the object code with a copy of the GNU GPL and this license
-   document.
 
-  4. Combined Works.
 
-  You may convey a Combined Work under terms of your choice that,
-taken together, effectively do not restrict modification of the
-portions of the Library contained in the Combined Work and reverse
-engineering for debugging such modifications, if you also do each of
-the following:
+ERKALE -- HF/DFT from Hel
+Copyright (C) 2010-2019 Susi Lehtola
 
-   a) Give prominent notice with each copy of the Combined Work that
-   the Library is used in it and that the Library and its use are
-   covered by this License.
+ERKALE is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 2 of the License, or (at your
+option) any later version.
 
-   b) Accompany the Combined Work with a copy of the GNU GPL and this license
-   document.
+ERKALE is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
-   c) For a Combined Work that displays copyright notices during
-   execution, include the copyright notice for the Library among
-   these notices, as well as a reference directing the user to the
-   copies of the GNU GPL and this license document.
+You should have received a copy of the GNU General Public License
+along with ERKALE.  If not, see <http://www.gnu.org/licenses/>.
 
-   d) Do one of the following:
 
-       0) Convey the Minimal Corresponding Source under the terms of this
-       License, and the Corresponding Application Code in a form
-       suitable for, and under terms that permit, the user to
-       recombine or relink the Application with a modified version of
-       the Linked Version to produce a modified Combined Work, in the
-       manner specified by section 6 of the GNU GPL for conveying
-       Corresponding Source.
 
-       1) Use a suitable shared library mechanism for linking with the
-       Library.  A suitable mechanism is one that (a) uses at run time
-       a copy of the Library already present on the user's computer
-       system, and (b) will operate properly with a modified version
-       of the Library that is interface-compatible with the Linked
-       Version.
+  
+Libint - a library for the evaluation of molecular integrals of many-body operators over Gaussian functions
 
-   e) Provide Installation Information, but only if you would otherwise
-   be required to provide such information under section 6 of the
-   GNU GPL, and only to the extent that such information is
-   necessary to install and execute a modified version of the
-   Combined Work produced by recombining or relinking the
-   Application with a modified version of the Linked Version. (If
-   you use option 4d0, the Installation Information must accompany
-   the Minimal Corresponding Source and Corresponding Application
-   Code. If you use option 4d1, you must provide the Installation
-   Information in the manner specified by section 6 of the GNU GPL
-   for conveying Corresponding Source.)
+Copyright (C) 2004-2019 Edward F. Valeev
 
-  5. Combined Libraries.
+Libint is free software. Most of the source code of the Libint compiler (code generator)
+can be redistributed and/or modified under the terms of the GNU General Public License, version 3,
+as published by the Free Software Foundation (see the accompanying file COPYING;
+if you did not receive this file refer to <http://www.gnu.org/licenses/>).
+The rest of Libint, including the generated source, can be distributed under
+the GNU Lesser General Public License, version 3, (see the file COPYING.LESSER,
+or <http://www.gnu.org/licenses/>). The applicable license is specified in each
+source file. If not indicated, the applicable license is GNU LGPL, version 3 (not GPL).
 
-  You may place library facilities that are a work based on the
-Library side by side in a single library together with other library
-facilities that are not Applications and are not covered by this
-License, and convey such a combined library under terms of your
-choice, if you do both of the following:
+Libint is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-   a) Accompany the combined library with a copy of the same work based
-   on the Library, uncombined with any other library facilities,
-   conveyed under the terms of this License.
 
-   b) Give prominent notice with the combined library that part of it
-   is a work based on the Library, and explaining where to find the
-   accompanying uncombined form of the same work.
 
-  6. Revised Versions of the GNU Lesser General Public License.
-
-  The Free Software Foundation may publish revised and/or new versions
-of the GNU Lesser General Public License from time to time. Such new
-versions will be similar in spirit to the present version, but may
-differ in detail to address new problems or concerns.
-
-  Each version is given a distinguishing version number. If the
-Library as you received it specifies that a certain numbered version
-of the GNU Lesser General Public License "or any later version"
-applies to it, you have the option of following the terms and
-conditions either of that published version or of any later version
-published by the Free Software Foundation. If the Library as you
-received it does not specify a version number of the GNU Lesser
-General Public License, you may choose any version of the GNU Lesser
-General Public License ever published by the Free Software Foundation.
-
-  If the Library as you received it specifies that a proxy can decide
-whether future versions of the GNU Lesser General Public License shall
-apply, that proxy's public statement of acceptance of any version is
-permanent authorization for you to choose that version for the
-Library.
