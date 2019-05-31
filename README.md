@@ -6,7 +6,7 @@ NEGFY merges three Quantum Physics codes, exploiting their particular capabiliti
 
 2. Libint (https://github.com/evaleev/libint): Evgeny Valeev's library for the evaluation of molecular integrals of many-body operators over Gaussian functions, provides the matrix form of al One-Body and Two-Body operators at the Hartree-Fock level.
 
-3. ERKALE -- HF/DFT from Helgaker (https://github.com/susilehtola/erkale): Susi Lehtola's DFT code provides the matrix form of al One-Body and Two-Body operators at the DFT level, by interfacing both Libint and the DFT Functional library LibXC.
+3. ERKALE -- HF/DFT from Helgaker (https://github.com/susilehtola/erkale): Susi Lehtola's DFT code provides the matrix form of all One-Body and Two-Body operators at the DFT level, by interfacing both Libint and the DFT Functional library LibXC.
 
 · e-mail - carlos.salgado@uam.es
 
