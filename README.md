@@ -4,7 +4,7 @@ NEGFY merges three Quantum Physics codes, exploiting their particular capabiliti
 
 1. ANT.G (https://www.simuneatomistics.com/ant/): developed by JJ Palacios and coworkers, computes the electronic structure with open boundary conditions in equilibrium and non-equilibrium situations (i.e., zero and finite bias voltage). It follows an onion shell structure, modelling the far electrodes with a parametrized Bethe lattice while computing at  the density functional theory level, as implemented in GAUSSIAN03/09, the central scattering region. Used through NEGFY, ANT is capable to work without calling GAUSSIAN.
 
-2. Libint (https://github.com/evaleev/libint): Evgeny Valeev's library for the evaluation of molecular integrals of many-body operators over Gaussian functions, provides the matrix form of al One-Body and Two-Body operators at the Hartree-Fock level.
+2. Libint (https://github.com/evaleev/libint): Edward Valeev's library for the evaluation of molecular integrals of many-body operators over Gaussian functions, provides the matrix form of al One-Body and Two-Body operators at the Hartree-Fock level.
 
 3. ERKALE -- HF/DFT from Helgaker (https://github.com/susilehtola/erkale): Susi Lehtola's DFT code provides the matrix form of all One-Body and Two-Body operators at the DFT level, by interfacing both Libint and the DFT Functional library LibXC.
 
